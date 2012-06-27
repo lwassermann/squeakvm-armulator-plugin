@@ -42,7 +42,7 @@ extern void	flushICacheFromTo(void *cpu, ulong strt, ulong nd);
 /*
  * force runCPUInSize to exit asap.  Used by interrupts.
  */
-extern void	forceStopRunning(void);
+extern void	forceStopRunning();
 /*
  * The previous entry in the interruptCheckChain so forceStopRunning can chain.
  */
