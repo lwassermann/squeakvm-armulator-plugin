@@ -24,6 +24,9 @@ static ulong	theMemorySize;
 static ulong	minReadAddress;
 static ulong	minWriteAddress;
 
+// what is that?
+	   void			(*prevInterruptCheckChain)() = 0;
+
 void*
 newCPU()
 {
