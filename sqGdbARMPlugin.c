@@ -15,32 +15,43 @@
 
 ARMul_State*	lastCPU;
 
+
+// These two variables exist, in case there are library-functions which write to a stream.
+// In that case, we would write functions which print to that stream instead of stderr or similar
 #define LOGSIZE 4096
 static char	gdb_log[LOGSIZE+1];
 static int	gdblog_index = 0;
 
-static unsigned char*	theMemory = 0;
-static ulong	theMemorySize;
-static ulong	minReadAddress;
-static ulong	minWriteAddress;
 
-// what is that?
+// what is that for?
 	   void			(*prevInterruptCheckChain)() = 0;
 
 void*
 newCPU()
 {
-    	lastCPU = ARMul_NewState();
+	lastCPU = ARMul_NewState();
 	return lastCPU;
 }
 
 int
 resetCPU(void* cpu)
 {
+	unsigned int i, j;
 	ARMul_State* state = (ARMul_State*) cpu;
 	// test whether the supplied instance is an ARMul type?
 	
 	gdblog_index = 0;
+	
+	// reset registers in all modes
+	for (i = 0; i < 16; i++)
+	{
+		state->Reg[i] = 0;
+		for (j = 0; j < 7; j++)
+			state->RegBank[j][i] = 0;
+	}
+	for (i = 0; i < 7; i++)
+		state->Spsr[i] = 0;
+	
 	ARMul_Reset(state);
 	return 0;
 }
@@ -53,8 +64,8 @@ singleStepCPUInSizeMinAddressReadWrite(void *cpu,
 	ARMul_State* state = (ARMul_State*) cpu;
 	// test whether the supplied instance is an ARMul type?
 	
-	theMemory = (unsigned char*) memory;
-	theMemorySize = byteSize;
+	state->MemDataPtr = (unsigned char*) memory;
+	state->MemSize = byteSize;
 	minReadAddress = minAddr;
 	minWriteAddress = minWriteMaxExecAddr;
 	
@@ -62,6 +73,11 @@ singleStepCPUInSizeMinAddressReadWrite(void *cpu,
 	
 	ARMul_SetPC(state, (ARMword) memory);
 	pc = ARMul_DoInstr(state);
+	
+	if(state->EndCondition != NoError){
+		return state->EndCondition;
+	}
+	
 	return gdblog_index == 0 ? 0 : SomethingLoggedError;
 }
 
@@ -73,16 +89,19 @@ runCPUInSizeMinAddressReadWrite(void *cpu, void *memory, ulong byteSize,
 	lastCPU = state;
 	
 	// test whether the supplied instance is an ARMul type?
-	theMemory = (unsigned char *)memory;
-	theMemorySize = byteSize;
-	minReadAddress = minAddr;
+	state->MemDataPtr = (unsigned char*) memory;
+	state->MemSize = byteSize;
+	minReadAddress  = minAddr;
 	minWriteAddress = minWriteMaxExecAddr;
 	
 	gdblog_index = 0;
 	
 	ARMul_SetPC(state, (ARMword) memory);
 	ARMul_DoProg(state);
-	// fill the errorAcorn?
+	
+	if(state->EndCondition != NoError){
+		return state->EndCondition;
+	}
 	
 	return gdblog_index == 0 ? 0 : SomethingLoggedError;
 }
@@ -94,7 +113,7 @@ runCPUInSizeMinAddressReadWrite(void *cpu, void *memory, ulong byteSize,
 void
 flushICacheFromTo(void *cpu, ulong saddr, ulong eaddr)
 {
-#if BX_SUPPORT_ICACHE
+#if 0
 # error not yet implemented
 #endif
 }

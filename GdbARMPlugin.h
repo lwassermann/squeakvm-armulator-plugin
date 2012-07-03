@@ -14,6 +14,9 @@
 typedef unsigned long ulong;
 #endif
 
+static ulong	minReadAddress, minWriteAddress;
+
+
 /*
  * Answer a pointer to a new ARMulator CPU (an instance of typedef ARMul_State)
  */

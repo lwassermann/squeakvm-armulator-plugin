@@ -57,26 +57,51 @@ defined to generate aborts. */
 
 int SWI_vector_installed = FALSE;
 
-#include <stdio.h>
+#include "GdbARMPlugin.h"
 
 /***************************************************************************\
-*        Get a Word from Virtual Memory, maybe allocating the page          *
+*        Get a Word from Memory          *
 \***************************************************************************/
 
 static ARMword
 GetWord (ARMul_State * state, ARMword address, int check)
 {
-  return *((ARMword*) address);
+  if(address < minReadAddress || address >= (state->MemSize))
+  {
+    //raise memory access error
+    state->EndCondition = MemoryBoundsError;
+    state->abortSig = HIGH;
+    state->Aborted = ARMul_AddrExceptnV;
+    return 0xEF000011; // SWI_Exit, has the effect, that simulation stops
+    
+    // A simple state->Emulate = STOP is not enough, because the returned instruction
+    // is interpreted and executed, before the STOP flag is looked at again.
+    //
+    // additionally, two instructions are always prefetched. Therefore, stopping 
+    // directly would stop one instructions early.
+  }
+  else
+  {
+    return *((ARMword*) (state->MemDataPtr + address));
+  }
 }
 
 /***************************************************************************\
-*        Put a Word into Virtual Memory, maybe allocating the page          *
+*        Put a Word into Memory          *
 \***************************************************************************/
 
 static void
 PutWord (ARMul_State * state, ARMword address, ARMword data, int check)
 {
-  *((ARMword*) address) = data;
+  if(address < minWriteAddress || address + 4 > (state->MemSize))
+  {
+    state->Emulate = FALSE;
+    state->EndCondition = MemoryBoundsError;
+  } 
+  else
+  {
+    *((ARMword*) address) = data;
+  }
 }
 
 /***************************************************************************\
