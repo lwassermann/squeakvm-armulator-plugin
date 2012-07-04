@@ -14,7 +14,7 @@
 typedef unsigned long ulong;
 #endif
 
-static ulong	minReadAddress, minWriteAddress;
+extern ulong	minReadAddress, minWriteAddress;
 
 
 /*
