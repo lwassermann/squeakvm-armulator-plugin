@@ -1,6 +1,7 @@
 /*
   This file is a compy of armvirt.c, which is part of the ARMulator distributed e.g. with gdb and skyeye.
   In order to overwrite GetWord and PutWord, I had to copy the whole file.
+  Also changed: ReLoadInstr.
 */
 
 /*  armvirt.c -- ARMulator virtual memory interace:  ARM6 Instruction Emulator.
@@ -58,6 +59,7 @@ defined to generate aborts. */
 int SWI_vector_installed = FALSE;
 
 #include "GdbARMPlugin.h"
+#include <stdio.h>
 
 /***************************************************************************\
 *        Get a Word from Memory          *
@@ -66,19 +68,12 @@ int SWI_vector_installed = FALSE;
 static ARMword
 GetWord (ARMul_State * state, ARMword address, int check)
 {
-  if(address < minReadAddress || address >= (state->MemSize))
+  if(address < minReadAddress || address + 4 > (state->MemSize))
   {
     //raise memory access error
     state->EndCondition = MemoryBoundsError;
-    state->abortSig = HIGH;
-    state->Aborted = ARMul_AddrExceptnV;
-    return 0xEF000011; // SWI_Exit, has the effect, that simulation stops
-    
-    // A simple state->Emulate = STOP is not enough, because the returned instruction
-    // is interpreted and executed, before the STOP flag is looked at again.
-    //
-    // additionally, two instructions are always prefetched. Therefore, stopping 
-    // directly would stop one instructions early.
+    state->Emulate = FALSE;
+    return ARMul_ABORTWORD;
   }
   else
   {
@@ -102,6 +97,50 @@ PutWord (ARMul_State * state, ARMword address, ARMword data, int check)
   {
     *((ARMword*) address) = data;
   }
+}
+
+/***************************************************************************\
+*                   ReLoad Instruction                                     *
+\***************************************************************************/
+
+ARMword
+ARMul_ReLoadInstr (ARMul_State * state, ARMword address, ARMword isize)
+{
+#ifdef ABORTS
+  if (address >= LOWABORT && address < HIGHABORT)
+    {
+      ARMul_PREFETCHABORT (address);
+      return ARMul_ABORTWORD;
+    }
+  else
+    {
+      ARMul_CLEARABORT;
+    }
+#endif
+
+  if (address < minReadAddress 
+  	  || address >= (state->MemSize) 
+  	  || (address >= minWriteAddress && minWriteAddress != 0))
+    {
+      state->EndCondition = MemoryBoundsError;
+      ARMul_PREFETCHABORT (address);
+      return 0xEF000011;
+    }
+  
+
+  if ((isize == 2) && (address & 0x2))
+    {
+      /* We return the next two halfwords: */
+      ARMword lo = GetWord (state, address, FALSE);
+      ARMword hi = GetWord (state, address + 4, FALSE);
+
+      if (state->bigendSig == HIGH)
+	return (lo << 16) | (hi >> 16);
+      else
+	return ((hi & 0xFFFF) << 16) | (lo >> 16);
+    }
+
+  return GetWord (state, address, TRUE);
 }
 
 /***************************************************************************\
@@ -152,40 +191,6 @@ ARMul_MemoryExit (ARMul_State * state)
     }
   free ((char *) pagetable);
   return;
-}
-
-/***************************************************************************\
-*                   ReLoad Instruction                                     *
-\***************************************************************************/
-
-ARMword
-ARMul_ReLoadInstr (ARMul_State * state, ARMword address, ARMword isize)
-{
-#ifdef ABORTS
-  if (address >= LOWABORT && address < HIGHABORT)
-    {
-      ARMul_PREFETCHABORT (address);
-      return ARMul_ABORTWORD;
-    }
-  else
-    {
-      ARMul_CLEARABORT;
-    }
-#endif
-
-  if ((isize == 2) && (address & 0x2))
-    {
-      /* We return the next two halfwords: */
-      ARMword lo = GetWord (state, address, FALSE);
-      ARMword hi = GetWord (state, address + 4, FALSE);
-
-      if (state->bigendSig == HIGH)
-	return (lo << 16) | (hi >> 16);
-      else
-	return ((hi & 0xFFFF) << 16) | (lo >> 16);
-    }
-
-  return GetWord (state, address, TRUE);
 }
 
 /***************************************************************************\

@@ -22,6 +22,7 @@ ARMul_State*	lastCPU;
 static char	gdb_log[LOGSIZE+1];
 static int	gdblog_index = 0;
 
+ulong	minReadAddress, minWriteAddress;
 
 // what is that for?
 	   void			(*prevInterruptCheckChain)() = 0;
@@ -57,13 +58,13 @@ resetCPU(void* cpu)
 }
 
 int
-singleStepCPUInSizeMinAddressReadWrite(void *cpu,
-		void *memory, ulong byteSize, ulong minAddr, ulong minWriteMaxExecAddr)
+singleStepCPUInSizeMinAddressReadWrite(void *cpu, void *memory, 
+		ulong byteSize, ulong minAddr, ulong minWriteMaxExecAddr)
 {
-	ARMword pc = 0;
 	ARMul_State* state = (ARMul_State*) cpu;
-	// test whether the supplied instance is an ARMul type?
+	lastCPU = state;
 	
+	// test whether the supplied instance is an ARMul type?
 	state->MemDataPtr = (unsigned char*) memory;
 	state->MemSize = byteSize;
 	minReadAddress = minAddr;
@@ -71,8 +72,8 @@ singleStepCPUInSizeMinAddressReadWrite(void *cpu,
 	
 	gdblog_index = 0;
 	
-	ARMul_SetPC(state, (ARMword) memory);
-	pc = ARMul_DoInstr(state);
+	state->EndCondition = NoError;
+	state->Reg[15] = ARMul_DoInstr(state);
 	
 	if(state->EndCondition != NoError){
 		return state->EndCondition;
@@ -82,8 +83,8 @@ singleStepCPUInSizeMinAddressReadWrite(void *cpu,
 }
 
 int
-runCPUInSizeMinAddressReadWrite(void *cpu, void *memory, ulong byteSize,
-								ulong minAddr, ulong minWriteMaxExecAddr)
+runCPUInSizeMinAddressReadWrite(void *cpu, void *memory, 
+		ulong byteSize, ulong minAddr, ulong minWriteMaxExecAddr)
 {
 	ARMul_State* state = (ARMul_State*) cpu;
 	lastCPU = state;
@@ -96,8 +97,8 @@ runCPUInSizeMinAddressReadWrite(void *cpu, void *memory, ulong byteSize,
 	
 	gdblog_index = 0;
 	
-	ARMul_SetPC(state, (ARMword) memory);
-	ARMul_DoProg(state);
+	state->EndCondition = NoError;
+	state->Reg[15] = ARMul_DoProg(state);
 	
 	if(state->EndCondition != NoError){
 		return state->EndCondition;
