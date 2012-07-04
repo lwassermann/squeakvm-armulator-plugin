@@ -9,6 +9,6 @@ EXTRALIBS:= -L/d/Dateien/cog/squeakvm-armulator-plugin \
 
 include ../../Makefile.plugin
 
-INCLUDES:= -I/d/build/gdb-7.4/sim/arm $(INCLUDES)
+INCLUDES:= $(INCLUDES) -I/d/build/gdb-7.4/sim/arm
 
 

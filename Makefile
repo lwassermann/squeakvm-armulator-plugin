@@ -13,3 +13,4 @@ all:
 #	mkdir ../cog/platforms/win32/plugins/GdbARMPlugin
 	cp sqGdbARMPlugin.c GdbARMPlugin.h armulmem.c ../cog/platforms/Cross/plugins/GdbARMPlugin/
 	cp Makefile.win32 ../cog/platforms/win32/plugins/GdbARMPlugin/Makefile
+	cd ../cog/cygwinbuild; make
