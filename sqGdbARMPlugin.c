@@ -85,13 +85,13 @@ singleStepCPUInSizeMinAddressReadWrite(void *cpu, void *memory,
 	state->EndCondition = NoError;
 	state->NextInstr = RESUME;
 	
-	printf("Stepping at %i.\n", state->Reg[15]);
-	print_state(state);
+	//printf("Stepping at %i.\n", state->Reg[15]);
+	//print_state(state);
 	
 	state->Reg[15] = ARMul_DoInstr(state);
 
-	printf("Stepped 'til %i.\n", state->Reg[15]);
-	print_state(state);
+	//printf("Stepped 'til %i.\n", state->Reg[15]);
+	//print_state(state);
 	
 	if(state->EndCondition != NoError){
 		return state->EndCondition;
@@ -118,13 +118,13 @@ runCPUInSizeMinAddressReadWrite(void *cpu, void *memory,
 	state->EndCondition = NoError;
 	state->NextInstr = RESUME;
 	
-	printf("Running at %i(%i).\n", state->Reg[15], state->Mode);
-	print_state(state);
+	//printf("Running at %i(%i).\n", state->Reg[15], state->Mode);
+	//print_state(state);
 	
 	state->Reg[15] = ARMul_DoProg(state);
 	
-	printf("Ran 'til   %i(%i).\n", state->Reg[15], state->Mode);
-	print_state(state);
+	//printf("Ran 'til   %i(%i).\n", state->Reg[15], state->Mode);
+	//print_state(state);
 	
 	if(state->EndCondition != NoError){
 		return state->EndCondition;

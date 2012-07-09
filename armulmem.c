@@ -122,7 +122,6 @@ ARMul_ReLoadInstr (ARMul_State * state, ARMword address, ARMword isize)
   	  || address >= (state->MemSize) 
   	  || (address >= minWriteAddress && minWriteAddress != 0))
     {
-      printf("MemoryBoundsError: %p\n", address);
       // Custom SWI, defined in the wrapper of ARMul_OSHandleSWI
       return 0xEF000000 | 0x200000;
       //      ^ SWI         ^ SWI number
