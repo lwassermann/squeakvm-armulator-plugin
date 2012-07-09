@@ -3,6 +3,7 @@
   In order to overwrite GetWord and PutWord, I had to copy the whole file.
   Also changed: ReLoadInstr.
 */
+#include "GdbARMPlugin.h"
 
 /*  armvirt.c -- ARMulator virtual memory interace:  ARM6 Instruction Emulator.
     Copyright (C) 1994 Advanced RISC Machines Ltd.
@@ -58,7 +59,6 @@ defined to generate aborts. */
 
 int SWI_vector_installed = FALSE;
 
-#include "GdbARMPlugin.h"
 #include <stdio.h>
 
 /***************************************************************************\
@@ -73,7 +73,7 @@ GetWord (ARMul_State * state, ARMword address, int check)
     //raise memory access error
     state->EndCondition = MemoryBoundsError;
     state->Emulate = FALSE;
-    return ARMul_ABORTWORD;
+    return 0;
   }
   else
   {
@@ -122,9 +122,10 @@ ARMul_ReLoadInstr (ARMul_State * state, ARMword address, ARMword isize)
   	  || address >= (state->MemSize) 
   	  || (address >= minWriteAddress && minWriteAddress != 0))
     {
-      state->EndCondition = MemoryBoundsError;
-      ARMul_PREFETCHABORT (address);
-      return 0xEF000011;
+      printf("MemoryBoundsError: %p\n", address);
+      // Custom SWI, defined in the wrapper of ARMul_OSHandleSWI
+      return 0xEF000000 | 0x200000;
+      //      ^ SWI         ^ SWI number
     }
   
 

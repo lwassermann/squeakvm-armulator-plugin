@@ -5,7 +5,7 @@ DLLWRAPEXTRA := $(DLLTOOLEXTRA)
 LINK_WITH_GPP := yes
 EXTRALIBS:= -L/d/Dateien/cog/squeakvm-armulator-plugin \
 			-L/d/build/gdb-7.4/opcodes \
-			-lsim -lopcodes -lbfd -lintl -liberty
+			-lsim -lopcodes -lbfd -lintl -liberty -Wl,-wrap,ARMul_OSHandleSWI
 
 include ../../Makefile.plugin
 

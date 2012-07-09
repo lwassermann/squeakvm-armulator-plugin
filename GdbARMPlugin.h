@@ -1,4 +1,4 @@
-/* copy of the BochsIA32Plugin.h */
+/* heavily based on BochsIA32Plugin.h */
 /* Bochs seems to use error code 1 for execution errors.
  * So we use > 1 for various errors
  */
@@ -9,6 +9,9 @@
 #define PanicError 4
 #define UnsupportedOperationError 5
 #define SomethingLoggedError 6
+
+// The library is compiled with TFlag, therefore, we also need to set it.
+#define MODET
 
 #if !defined(ulong)
 typedef unsigned long ulong;

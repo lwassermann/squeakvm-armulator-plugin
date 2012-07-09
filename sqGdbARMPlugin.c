@@ -1,6 +1,8 @@
 #define COG 1
 #define FOR_COG_PLUGIN 1
 
+#include "GdbARMPlugin.h"
+
 //disassembler
 #include <bfd.h>
 #include <dis-asm.h>
@@ -10,8 +12,6 @@
 //emulator
 #include <armdefs.h>
 #include <armemu.h>
-
-#include "GdbARMPlugin.h"
 
 ARMul_State*	lastCPU;
 
@@ -26,6 +26,16 @@ ulong	minReadAddress, minWriteAddress;
 
 // what is that for?
 	   void			(*prevInterruptCheckChain)() = 0;
+
+void
+print_state(ARMul_State* state)
+{
+	printf("NextInstr: %i\ttheMemory: 0x%p\tNumInstrs: 0x%p\tPC: 0x%p\tmode: %i\tEndCondition: %i\tEmulate: %i\n", 
+		state->NextInstr, state->MemDataPtr, 
+		state->NumInstrs, state->Reg[15], 
+		state->Mode, state->EndCondition, 
+		state->Emulate);
+}
 
 void*
 newCPU()
@@ -73,7 +83,15 @@ singleStepCPUInSizeMinAddressReadWrite(void *cpu, void *memory,
 	gdblog_index = 0;
 	
 	state->EndCondition = NoError;
+	state->NextInstr = RESUME;
+	
+	printf("Stepping at %i.\n", state->Reg[15]);
+	print_state(state);
+	
 	state->Reg[15] = ARMul_DoInstr(state);
+
+	printf("Stepped 'til %i.\n", state->Reg[15]);
+	print_state(state);
 	
 	if(state->EndCondition != NoError){
 		return state->EndCondition;
@@ -98,7 +116,15 @@ runCPUInSizeMinAddressReadWrite(void *cpu, void *memory,
 	gdblog_index = 0;
 	
 	state->EndCondition = NoError;
+	state->NextInstr = RESUME;
+	
+	printf("Running at %i(%i).\n", state->Reg[15], state->Mode);
+	print_state(state);
+	
 	state->Reg[15] = ARMul_DoProg(state);
+	
+	printf("Ran 'til   %i(%i).\n", state->Reg[15], state->Mode);
+	print_state(state);
 	
 	if(state->EndCondition != NoError){
 		return state->EndCondition;
@@ -189,23 +215,20 @@ getlog(long *len)
 	return gdb_log;
 }
 
-/*
-void
-initialiseModule()
+// adding custom Software Interrupts to the ARMulator
+unsigned __real_ARMul_OSHandleSWI(ARMul_State*, ARMword);
+  
+unsigned
+__wrap_ARMul_OSHandleSWI (ARMul_State * state, ARMword number)
 {
-	ARMul_EmulateInit();
+	switch(number)
+	  {
+		case 0x200000:
+			// This is the SWI number which is returned by our memory interface 
+			// if there is an instruction fetch for an illegal address.
+			state->Emulate = STOP;
+			state->EndCondition = MemoryBoundsError;
+			return TRUE;
+	  }
+	return __real_ARMul_OSHandleSWI(state, number);
 }
-
-void
-shutdownModule()
-{
-	// nothing to do so far.
-	// maybe free the cpu, once that turns into a singleton
-}
-
-void
-setInterpreter(int interpreterProxy)
-{
-	// not needed, so the interpreterProxy is not saved in a static var
-}
-*/
