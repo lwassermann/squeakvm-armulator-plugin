@@ -1,6 +1,5 @@
 CC      = gcc
-# activate MODET because otherwise we would need to recompile libsim.a
-CFLAGS  = -DMODET
+CFLAGS  = 
 LDFLAGS = libsim.a $(GDBBUILDFOLDER)/opcodes/libopcodes.a -lbfd -lintl -liberty -Wl,-wrap,ARMul_OSHandleSWI
 GDBBUILDFOLDER = /d/build/gdb-7.4
 SHAREDLIBRARYFLAGS = 

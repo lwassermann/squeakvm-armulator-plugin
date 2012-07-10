@@ -73,6 +73,7 @@ GetWord (ARMul_State * state, ARMword address, int check)
     //raise memory access error
     state->EndCondition = MemoryBoundsError;
     state->Emulate = FALSE;
+    gdb_log_printf(NULL, "Illegal memory read at 0x%p. ", address);
     return 0;
   }
   else
@@ -92,10 +93,11 @@ PutWord (ARMul_State * state, ARMword address, ARMword data, int check)
   {
     state->Emulate = FALSE;
     state->EndCondition = MemoryBoundsError;
+    gdb_log_printf(NULL, "Illegal memory write at 0x%p. ", address);
   } 
   else
   {
-    *((ARMword*) address) = data;
+    *((ARMword*) (state->MemDataPtr + address)) = data;
   }
 }
 
@@ -121,12 +123,12 @@ ARMul_ReLoadInstr (ARMul_State * state, ARMword address, ARMword isize)
   if (address < minReadAddress 
   	  || address >= (state->MemSize) 
   	  || (address >= minWriteAddress && minWriteAddress != 0))
-    {
-      // Custom SWI, defined in the wrapper of ARMul_OSHandleSWI
-      return 0xEF000000 | 0x200000;
-      //      ^ SWI         ^ SWI number
-    }
-  
+  {
+  	  // Custom SWI, defined in the wrapper of ARMul_OSHandleSWI
+  	  return 0xEF000000 | 0x200000;
+  	  //      ^ SWI         ^ SWI number
+  }
+  printf("0x%p\n", address);
 
   if ((isize == 2) && (address & 0x2))
     {

@@ -68,8 +68,8 @@ resetCPU(void* cpu)
 }
 
 int
-singleStepCPUInSizeMinAddressReadWrite(void *cpu, void *memory, 
-		ulong byteSize, ulong minAddr, ulong minWriteMaxExecAddr)
+runOnCPU(void *cpu, void *memory, 
+		ulong byteSize, ulong minAddr, ulong minWriteMaxExecAddr, ARMword (*run)(ARMul_State*))
 {
 	ARMul_State* state = (ARMul_State*) cpu;
 	lastCPU = state;
@@ -85,13 +85,10 @@ singleStepCPUInSizeMinAddressReadWrite(void *cpu, void *memory,
 	state->EndCondition = NoError;
 	state->NextInstr = RESUME;
 	
-	//printf("Stepping at %i.\n", state->Reg[15]);
-	//print_state(state);
+	state->Reg[15] = run(state);
 	
-	state->Reg[15] = ARMul_DoInstr(state);
-
-	//printf("Stepped 'til %i.\n", state->Reg[15]);
-	//print_state(state);
+	// collect the PSR from their dedicated flags to have easy access from the image.
+	ARMul_SetCPSR(state, ARMul_GetCPSR(state));
 	
 	if(state->EndCondition != NoError){
 		return state->EndCondition;
@@ -101,36 +98,17 @@ singleStepCPUInSizeMinAddressReadWrite(void *cpu, void *memory,
 }
 
 int
+singleStepCPUInSizeMinAddressReadWrite(void *cpu, void *memory, 
+		ulong byteSize, ulong minAddr, ulong minWriteMaxExecAddr)
+{
+	return runOnCPU(cpu, memory, byteSize, minAddr, minWriteMaxExecAddr, ARMul_DoInstr);
+}
+
+int
 runCPUInSizeMinAddressReadWrite(void *cpu, void *memory, 
 		ulong byteSize, ulong minAddr, ulong minWriteMaxExecAddr)
 {
-	ARMul_State* state = (ARMul_State*) cpu;
-	lastCPU = state;
-	
-	// test whether the supplied instance is an ARMul type?
-	state->MemDataPtr = (unsigned char*) memory;
-	state->MemSize = byteSize;
-	minReadAddress  = minAddr;
-	minWriteAddress = minWriteMaxExecAddr;
-	
-	gdblog_index = 0;
-	
-	state->EndCondition = NoError;
-	state->NextInstr = RESUME;
-	
-	//printf("Running at %i(%i).\n", state->Reg[15], state->Mode);
-	//print_state(state);
-	
-	state->Reg[15] = ARMul_DoProg(state);
-	
-	//printf("Ran 'til   %i(%i).\n", state->Reg[15], state->Mode);
-	//print_state(state);
-	
-	if(state->EndCondition != NoError){
-		return state->EndCondition;
-	}
-	
-	return gdblog_index == 0 ? 0 : SomethingLoggedError;
+	return runOnCPU(cpu, memory, byteSize, minAddr, minWriteMaxExecAddr, ARMul_DoProg);
 }
 
 // next functions reason for existence is not clear
@@ -146,14 +124,18 @@ flushICacheFromTo(void *cpu, ulong saddr, ulong eaddr)
 }
 
 int
-gdb_log_sprintf(void* stream, const char * format, ...)
+gdb_log_printf(void* stream, const char * format, ...)
 {
 	va_list arg;
 	int n;
-	
 	va_start(arg,format);
-	n = vsnprintf((char*) (&gdb_log) + gdblog_index, LOGSIZE-gdblog_index, format, arg);
-	gdblog_index = gdblog_index + n;
+	
+	if(stream == NULL){
+		n = vsnprintf((char*) (&gdb_log) + gdblog_index, LOGSIZE-gdblog_index, format, arg);
+		gdblog_index = gdblog_index + n;
+	} else {
+		vfprintf(stream, format, arg);
+	}
 	return 0;
 }
 
@@ -168,7 +150,7 @@ disassembleForAtInSize(void *cpu, ulong laddr,
 	
 	disassemble_info* dis = (disassemble_info*) calloc(1, sizeof(disassemble_info));
 	// void init_disassemble_info (struct disassemble_info *dinfo, void *stream, fprintf_ftype fprintf_func)
-	init_disassemble_info ( dis, NULL, gdb_log_sprintf);
+	init_disassemble_info ( dis, NULL, gdb_log_printf);
 	
 	dis->arch = bfd_arch_arm;
 	dis->mach = bfd_mach_arm_unknown;
@@ -191,7 +173,6 @@ disassembleForAtInSize(void *cpu, ulong laddr,
 	size_t max_pos = dis->buffer_vma+dis->buffer_length;
 	
 	unsigned int size = disassembler((bfd_vma) pos, dis);
-	gdb_log_sprintf(NULL, "\n");
 	
 	free(dis);
 	gdb_log[gdblog_index+1] = 0;
@@ -228,6 +209,9 @@ __wrap_ARMul_OSHandleSWI (ARMul_State * state, ARMword number)
 			// if there is an instruction fetch for an illegal address.
 			state->Emulate = STOP;
 			state->EndCondition = MemoryBoundsError;
+			
+			// during execution, the pc points the next fetch address, which is 8 byte after the current instruction.
+			gdb_log_printf(NULL, "Illegal Instruction fetch address (0x%p).", state->Reg[15]-8);
 			return TRUE;
 	  }
 	return __real_ARMul_OSHandleSWI(state, number);

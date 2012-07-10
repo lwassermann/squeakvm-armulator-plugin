@@ -18,6 +18,7 @@ typedef unsigned long ulong;
 #endif
 
 extern ulong	minReadAddress, minWriteAddress;
+extern int gdb_log_printf(void* stream, const char * format, ...);
 
 
 /*
