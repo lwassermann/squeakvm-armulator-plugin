@@ -149,9 +149,11 @@ int
 gdb_log_sprintf(void* stream, const char * format, ...)
 {
 	va_list arg;
+	int n;
 	
 	va_start(arg,format);
-	vsnprintf((char*) (&gdb_log) + gdblog_index, LOGSIZE-gdblog_index, format, arg);
+	n = vsnprintf((char*) (&gdb_log) + gdblog_index, LOGSIZE-gdblog_index, format, arg);
+	gdblog_index = gdblog_index + n;
 	return 0;
 }
 
@@ -159,6 +161,7 @@ int
 disassembleForAtInSize(void *cpu, ulong laddr,
 			void *memory, ulong byteSize)
 {
+	gdblog_index = 0;
 	// ignore the cpu
 	// start disassembling at laddr relative to memory
 	// stop disassembling at memory+byteSize
@@ -172,8 +175,8 @@ disassembleForAtInSize(void *cpu, ulong laddr,
 	
 	// sets some fields in the structure dis to architecture specific values
 	disassemble_init_for_target( dis );
-	// given a bfd, the disassembler can find the arch by itself.
-	// unfortunately, we don't have bfd-structures, so we have to choose the function by hand.
+	// Given a bfd, the disassembler can find the arch by itself.
+	// Unfortunately, we don't have bfd-structures, so we have to choose the function by hand.
 	//disassemble = disassembler( c );
 	disassembler_ftype disassembler = print_insn_little_arm;
 	//other possible functions are listed in opcodes/dissassemble.c
@@ -187,16 +190,13 @@ disassembleForAtInSize(void *cpu, ulong laddr,
 	size_t pos = laddr;
 	size_t max_pos = dis->buffer_vma+dis->buffer_length;
 	
-	while(pos < max_pos)
-	  {
-	    unsigned int size = disassembler((bfd_vma) pos, dis);
-	    pos += size;
-	    isize++;
-	    gdb_log_sprintf(NULL, "\n");
-	  }
+	unsigned int size = disassembler((bfd_vma) pos, dis);
+	gdb_log_sprintf(NULL, "\n");
+	
 	free(dis);
 	gdb_log[gdblog_index+1] = 0;
-	return isize;
+	
+	return size;
 }
 
 void
