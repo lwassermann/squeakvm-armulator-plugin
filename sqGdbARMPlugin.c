@@ -13,7 +13,7 @@
 #include <armdefs.h>
 #include <armemu.h>
 
-ARMul_State*	lastCPU;
+ARMul_State*	lastCPU = NULL;
 
 
 // These two variables exist, in case there are library-functions which write to a stream.
@@ -40,6 +40,7 @@ print_state(ARMul_State* state)
 void*
 newCPU()
 {
+	if(lastCPU == NULL) ARMul_EmulateInit();
 	lastCPU = ARMul_NewState();
 	return lastCPU;
 }

@@ -128,8 +128,7 @@ ARMul_ReLoadInstr (ARMul_State * state, ARMword address, ARMword isize)
   	  return 0xEF000000 | 0x200000;
   	  //      ^ SWI         ^ SWI number
   }
-  printf("0x%p\n", address);
-
+  
   if ((isize == 2) && (address & 0x2))
     {
       /* We return the next two halfwords: */
