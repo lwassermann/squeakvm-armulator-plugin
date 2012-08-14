@@ -1,0 +1,7 @@
+XCFLAGS		= -m32
+XINCLUDES	+= -I$(topdir)/../gdb/sim/arm
+
+XLDFLAGS=	-L$(topdir)/../gdb/sim/arm \
+		-L$(topdir)/../gdb/opcodes \
+		-lsim -lopcodes -lbfd -liberty \
+		-Wl,-wrap,ARMul_OSHandleSWI
