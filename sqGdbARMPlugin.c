@@ -15,11 +15,9 @@
 
 ARMul_State*	lastCPU = NULL;
 
-#ifdef NEED_UI_LOOP_HOOK
-/* When compiling armulator on linux, it generally sets NEED_UI_LOOP_HOOK, which 
+/* When compiling armulator, it generally sets NEED_UI_LOOP_HOOK, which 
 	makes the main emulation step require this symbol to be set. */
 extern int (*deprecated_ui_loop_hook) (int) = NULL;
-#endif
 
 // These two variables exist, in case there are library-functions which write to a stream.
 // In that case, we would write functions which print to that stream instead of stderr or similar
@@ -117,9 +115,8 @@ runCPUInSizeMinAddressReadWrite(void *cpu, void *memory,
 	return runOnCPU(cpu, memory, byteSize, minAddr, minWriteMaxExecAddr, ARMul_DoProg);
 }
 
-// next functions reason for existence is not clear
 /*
- * Currently a dummy for Bochs.
+ * Currently a dummy for ARM Processor Alien.
  */
 void
 flushICacheFromTo(void *cpu, ulong saddr, ulong eaddr)

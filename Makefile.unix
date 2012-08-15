@@ -1,4 +1,4 @@
-XCFLAGS		= -m32 -DNEED_UI_LOOP_HOOK
+XCFLAGS		= -m32
 XINCLUDES	+= -I$(topdir)/../gdb/sim/arm
 
 XLDFLAGS=	$(topdir)/../gdb/sim/arm/libsim.a \
