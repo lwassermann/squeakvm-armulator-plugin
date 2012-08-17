@@ -1,0 +1,34 @@
+Building the GdbARMPlugin
+------------------------------
+
+Build the normal VM on your Platform. Consult Cog/{cygwinbuild|unixbuild|macbuild}/HowToBuild for additional information.
+When generating sources, update to the latest versions of Cog and VMMaker.oscog.
+You might want/need to change VMMaker class>generateSqueakCogVM to point to the right directories and remove FT2Plugin from the plugin-list (even if skipped, generates a messageNotUnderstood). You can also change VMMaker>plugins:do: removing the return in the false block, in order to skip when a plugin is not found, instead of aborting the generation process.
+
+Building on Windows
+------------------------------
+<to come>
+
+Building on Linux
+------------------------------
+(so far tried on Ubuntu 12.04 LTS 32bit)
+
+Download the gdb sources (http://ftp.gnu.org/gnu/gdb) and unpack them.
+Change Makefile and Makefile.unix, setting GDBBUILDFOLDER to the correct place.
+
+Compile libopcodes.a:
+	cd GDBBUILDFOLDER
+	./configure --enable-targets=arm-linux
+Making gdb takes quite some time. It may fail, as long as it generates <gdb>/bfd/bfd.h and <gdb>/opcodes/libopcodes.a
+	make
+Compile libsim.a
+	cd sim/common
+	./configure
+	cd ../arm
+	./configure
+	make
+Ensure libsim.a exists in <gdb>/sim/arm.
+
+Make the plugin (which just copies the plugin-files to the appropriate directories.
+Then change the Cog/unixbuild/bld/plugins.ext to include GdbARMPlugin.
+Build the VM again.

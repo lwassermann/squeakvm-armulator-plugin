@@ -1,7 +1,10 @@
-XCFLAGS		= -m32
-XINCLUDES	+= -I$(topdir)/../gdb/sim/arm
+GDBBUILDFOLDER	= $(topdir)/../gdb
+XCFLAGS		= -m32 -DNEED_UI_LOOP_HOOK
 
-XLDFLAGS=	$(topdir)/../gdb/sim/arm/libsim.a \
-		$(topdir)/../gdb/opcodes/libopcodes.a \
+XINCLUDES	+= -I$(GDBBUILDFOLDER)/sim/arm
+XINCLUDES	:= -I$(GDBBUILDFOLDER)/bfd $(XINCLUDES)
+
+XLDFLAGS=	$(GDBBUILDFOLDER)/sim/arm/libsim.a \
+		$(GDBBUILDFOLDER)/opcodes/libopcodes.a \
 		-lbfd -liberty \
 		-Wl,-wrap,ARMul_OSHandleSWI
