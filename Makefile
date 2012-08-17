@@ -1,6 +1,6 @@
 CC      = gcc
-CFLAGS  = 
-LDFLAGS = libsim.a $(GDBBUILDFOLDER)/opcodes/libopcodes.a -lbfd -liberty -Wl,-wrap,ARMul_OSHandleSWI -L$(GDBBUILDFOLDER)/bfd/ 
+CFLAGS  = -I$(GBDBUILDFOLDER)/bfd 
+LDFLAGS = $(GDBBUILDFOLDER)/sim/arm/libsim.a $(GDBBUILDFOLDER)/opcodes/libopcodes.a -lbfd -liberty -Wl,-wrap,ARMul_OSHandleSWI -L$(GDBBUILDFOLDER)/bfd/ 
 GDBBUILDFOLDER = ../gdb
 SHAREDLIBRARYFLAGS = 
 

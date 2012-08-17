@@ -168,12 +168,8 @@ disassembleForAtInSize(void *cpu, ulong laddr,
 	dis->buffer = memory;
 	dis->buffer_length = byteSize;
 	
-	printf("reached D, %p\n", print_insn_little_arm);
-	
 	//other possible functions are listed in opcodes/dissassemble.c
 	unsigned int size = print_insn_little_arm((bfd_vma) laddr, dis);
-	
-	printf("reached E\n");
 	
 	free(dis);
 	gdb_log[gdblog_index+1] = 0;
@@ -212,7 +208,7 @@ __wrap_ARMul_OSHandleSWI (ARMul_State * state, ARMword number)
 			state->EndCondition = MemoryBoundsError;
 			
 			// during execution, the pc points the next fetch address, which is 8 byte after the current instruction.
-			gdb_log_printf(NULL, "Illegal Instruction fetch address (0x%p).", state->Reg[15]-8);
+			gdb_log_printf(NULL, "Illegal Instruction fetch address (%#p).", state->Reg[15]-8);
 			return TRUE;
 	  }
 	return __real_ARMul_OSHandleSWI(state, number);
