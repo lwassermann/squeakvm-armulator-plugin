@@ -1,17 +1,18 @@
-DLLTOOLEXTRA := /d/build/gdb-7.4/sim/arm/libsim.a \
-				/d/build/gdb-7.4/opcodes/libopcodes.a \
-				/d/build/gdb-7.4/intl/libintl.a \
-				/d/build/gdb-7.4/bfd/libbfd.a
+GDBBUILDFOLDER = /d/Programming/cog/gdb
+DLLTOOLEXTRA := $(GDBBUILDFOLDER)/sim/arm/libsim.a \
+				$(GDBBUILDFOLDER)/opcodes/libopcodes.a \
+				$(GDBBUILDFOLDER)/intl/libintl.a \
+				$(GDBBUILDFOLDER)/bfd/libbfd.a
 DLLWRAPEXTRA := $(DLLTOOLEXTRA)
 
 LINK_WITH_GPP := yes
-EXTRALIBS:= -L/d/build/gdb-7.4/opcodes \
-			-L/d/build/gdb-7.4/sim/arm \
+EXTRALIBS:= -L$(GDBBUILDFOLDER)/opcodes \
+			-L$(GDBBUILDFOLDER)/sim/arm \
 			-lsim -lopcodes -lbfd -lintl -liberty -Wl,-wrap,ARMul_OSHandleSWI
 
 include ../../Makefile.plugin
 
-INCLUDES:= $(INCLUDES) -I/d/build/gdb-7.4/sim/arm
+INCLUDES:= $(INCLUDES) -I$(GDBBUILDFOLDER)/sim/arm
 
 # Copy libgcc_s_dw2-1.dll, libiconv-2.dll and libintl-8.dll from your MinGW/bin 
 # folder to the VM folder, to make it work on other Windows (7?) systems
