@@ -11,7 +11,7 @@ Building on Windows
 
 Building on Linux
 ------------------------------
-(so far tried on Ubuntu 12.04 LTS 32)
+(so far tried on Ubuntu 12.04 LTS 32bit)
 
 Download the gdb sources (http://ftp.gnu.org/gnu/gdb) and unpack them.
 Change Makefile and Makefile.unix, setting GDBBUILDFOLDER to the correct place.
@@ -30,5 +30,5 @@ Compile libsim.a
 Ensure libsim.a exists in <gdb>/sim/arm.
 
 Make the plugin (which just copies the plugin-files to the appropriate directories.
-Then change the plugins.ext-file in Cog/unixbuild/bld to include GdbARMPlugin.
+Then change the Cog/unixbuild/bld/plugins.ext to include GdbARMPlugin.
 Build the VM again.
