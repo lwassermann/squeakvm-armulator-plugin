@@ -17,19 +17,35 @@ the generation process.
 Building on Windows
 ------------------------------
 (so far tried with Windows 7 64bit unsing mingw/MSYS 32bit)
+
+Besides the normal build environment, you need the package gettext.
+Also, downgrade your mingwrt package to 3.20 (not 3.20-2) by unpacking
+the respective -dev tarball into your mingw-folder.
+
 When compiling the Squeak VM you need a version 3 gcc/g++. 
-For compiling gdb, you need a version 4 gcc (no g++, I think).
-For switching between compilers in mingw, use 
+For configuration of gdb, you need a version 4 gcc (you don't need 
+to switch g++). For switching between compilers in mingw, 
+you may use 
 	mingw-get install/remove gcc/gcc-v3/g++/gcc-v3-g++.
 
-Compile gdb with a gcc 4.*.
-	cd <gdb>
+Compile gdb/bfd and gdb/opcodes with a gcc 4.*.
+	cd <gdb>/bfd
 	./configure --enable-targets=arm-linux
 	make
+	cd <gdb>/opcodes
+	./configure --enable-targets=arm-linux
+	make
+Then switch to gcc-v3.
+	cd <gdb>/bfd
+	make clean && make
+	cd <gdb>/opcodes
+	make clean && make
+	
+For libsim.a, the gcc version is not important.
 	cd sim/common
 	./configure
 	cd ../arm
-	./configure && make
+	./configure && make libsim.a
 
 Change Makefile.win32 to point to your gdb folder.
 Then copy the plugin files to your svn-checkout, 

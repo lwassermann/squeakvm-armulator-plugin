@@ -1,9 +1,4 @@
 GDBBUILDFOLDER = /d/Programming/cog/gdb
-DLLTOOLEXTRA := $(GDBBUILDFOLDER)/sim/arm/libsim.a \
-				$(GDBBUILDFOLDER)/opcodes/libopcodes.a \
-				$(GDBBUILDFOLDER)/intl/libintl.a \
-				$(GDBBUILDFOLDER)/bfd/libbfd.a
-DLLWRAPEXTRA := $(DLLTOOLEXTRA)
 
 LINK_WITH_GPP := yes
 EXTRALIBS:= -L$(GDBBUILDFOLDER)/opcodes \
