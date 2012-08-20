@@ -1,7 +1,5 @@
 /* heavily based on BochsIA32Plugin.h */
-/* Bochs seems to use error code 1 for execution errors.
- * So we use > 1 for various errors
- */
+
 #define NoError 0
 #define ExecutionError 1
 #define BadCPUInstance 2

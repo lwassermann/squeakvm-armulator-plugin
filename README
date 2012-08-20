@@ -1,0 +1,5 @@
+This is a VM Plugin for the Cog VM, enabling debugging and simulation of the ARM-JIT.
+
+For instruction on how to build the plugin, consult HowToBuild.
+
+The plugin is based on the gdb libraries opcode and ARMulator.

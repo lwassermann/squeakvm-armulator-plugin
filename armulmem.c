@@ -1,7 +1,9 @@
 /*
-  This file is a compy of armvirt.c, which is part of the ARMulator distributed e.g. with gdb and skyeye.
-  In order to overwrite GetWord and PutWord, I had to copy the whole file.
-  Also changed: ReLoadInstr.
+  This file is a compy of armvirt.c, which is part of the ARMulator distributed 
+  e.g. with gdb and skyeye. In order to overwrite GetWord and PutWord, 
+  we had to copy the whole file.
+  ReLoadInstr is also changed, in order to implement execution 
+  prevention despite instruction prefetching.
 */
 #include "GdbARMPlugin.h"
 
@@ -71,8 +73,8 @@ GetWord (ARMul_State * state, ARMword address, int check)
   if(address < minReadAddress || address + 4 > (state->MemSize))
   {
     //raise memory access error
-    state->EndCondition = MemoryBoundsError;
     state->Emulate = FALSE;
+    state->EndCondition = MemoryBoundsError;
     gdb_log_printf(NULL, "Illegal memory read at %#p. ", address);
     return 0;
   }
@@ -91,6 +93,7 @@ PutWord (ARMul_State * state, ARMword address, ARMword data, int check)
 {
   if(address < minWriteAddress || address + 4 > (state->MemSize))
   {
+    //raise memory access error
     state->Emulate = FALSE;
     state->EndCondition = MemoryBoundsError;
     gdb_log_printf(NULL, "Illegal memory write at %#p. ", address);

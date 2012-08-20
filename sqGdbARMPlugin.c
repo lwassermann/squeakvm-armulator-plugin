@@ -20,16 +20,16 @@ ARMul_State*	lastCPU = NULL;
 extern int (*deprecated_ui_loop_hook) (int) = NULL;
 
 // These two variables exist, in case there are library-functions which write to a stream.
-// In that case, we would write functions which print to that stream instead of stderr or similar
+// In that case, supply gdb_log_printf, which writes to those two variables.
 #define LOGSIZE 4096
 static char	gdb_log[LOGSIZE+1];
 static int	gdblog_index = 0;
 
 ulong	minReadAddress, minWriteAddress;
 
-// what is that for?
 	   void			(*prevInterruptCheckChain)() = 0;
 
+// used only for debugging purposes
 void
 print_state(ARMul_State* state)
 {
@@ -142,17 +142,15 @@ gdb_log_printf(void* stream, const char * format, ...)
 	return 0;
 }
 
+// disassemble one instruction at laddr relative to memory, but at most memory+byteSize
 int
 disassembleForAtInSize(void *cpu, ulong laddr,
 			void *memory, ulong byteSize)
 {
 	gdblog_index = 0;
 	// ignore the cpu
-	// start disassembling at laddr relative to memory
-	// stop disassembling at memory+byteSize
-	
+
 	disassemble_info* dis = (disassemble_info*) calloc(1, sizeof(disassemble_info));
-	// void init_disassemble_info (struct disassemble_info *dinfo, void *stream, fprintf_ftype fprintf_func)
 	init_disassemble_info ( dis, NULL, gdb_log_printf);
 	
 	dis->arch = bfd_arch_arm;
@@ -169,6 +167,7 @@ disassembleForAtInSize(void *cpu, ulong laddr,
 	unsigned int size = print_insn_little_arm((bfd_vma) laddr, dis);
 	
 	free(dis);
+	// zero terminate the string
 	gdb_log[gdblog_index+1] = 0;
 	
 	return size;
@@ -190,7 +189,7 @@ getlog(long *len)
 	return gdb_log;
 }
 
-// adding custom Software Interrupts to the ARMulator
+// adding a custom Software Interrupt to the ARMulator
 unsigned __real_ARMul_OSHandleSWI(ARMul_State*, ARMword);
   
 unsigned
