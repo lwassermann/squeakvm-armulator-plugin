@@ -163,6 +163,9 @@ disassembleForAtInSize(void *cpu, ulong laddr,
 	dis->buffer = memory;
 	dis->buffer_length = byteSize;
 	
+	//prepend the address
+	gdb_log_printf(NULL, "0x%p: ", laddr);
+	
 	//other possible functions are listed in opcodes/dissassemble.c
 	unsigned int size = print_insn_little_arm((bfd_vma) laddr, dis);
 	
